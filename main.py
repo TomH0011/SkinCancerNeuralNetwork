@@ -13,7 +13,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.metrics import Recall
 
 
-# MY SECRET KEY "username":"tomhoward0","key":"a104396db2956a6f55db671e74ffc5c7"}
+
 class build:
     def extraction(self):
         dataset_path = r"C:\Users\tomjh\Desktop\Cancer Cell Dataset"
