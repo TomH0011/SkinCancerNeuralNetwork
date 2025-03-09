@@ -79,36 +79,38 @@ class Build:
         return train_generator, test_generator, label_mapping
 
 class CNN:
-    def define_cnn(self, train_generator):
+    def define_cnn(self, train_generator, dropout_rate=0.5, l2_reg=0.01):  # Add parameters
         num_classes = len(train_generator.class_indices)
 
         model = models.Sequential([
-            layers.Conv2D(32, (3, 3), activation='relu', input_shape=(128, 128, 3)),
+            layers.Conv2D(32, (3, 3), activation='relu', input_shape=(128, 128, 3), kernel_regularizer=tf.keras.regularizers.l2(l2_reg)),
             layers.MaxPooling2D((2, 2)),
-            layers.Conv2D(64, (3, 3), activation='relu'),
+            layers.Conv2D(64, (3, 3), activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2_reg)),
             layers.MaxPooling2D((2, 2)),
-            layers.Conv2D(64, (3, 3), activation='relu'),
+            layers.Conv2D(64, (3, 3), activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2_reg)),
             layers.Flatten(),
-            layers.Dense(128, activation='relu'),
-            layers.Dropout(0.75),
+            layers.Dense(128, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2_reg)),
+            layers.Dropout(dropout_rate),
             layers.Dense(num_classes, activation='softmax')
         ])
 
         model.summary()
         return model
 
-    def learn(self, model, train_generator, test_generator, label_mapping):
+    def learn(self, model, train_generator, test_generator, label_mapping, learning_rate=0.001, batch_size=32, epochs=10):
 
         model.compile(optimizer='adam',
                       loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
                       metrics=[
-                          keras.metrics.FalsePositives(),
+                          keras.metrics.FalseNegatives(),
                           keras.metrics.Recall(),
                           keras.metrics.CategoricalAccuracy()
                       ])
 
-        history = model.fit(train_generator, epochs=10, validation_data=test_generator)
-
+        history = model.fit(train_generator,
+                            epochs=epochs,
+                            batch_size=batch_size,  # Use the specified batch size
+                            validation_data=test_generator)
         plt.plot(history.history['categorical_accuracy'], label='train_accuracy')
         plt.plot(history.history['val_categorical_accuracy'], label='val_accuracy')
         plt.xlabel('Epochs')
@@ -121,5 +123,13 @@ class CNN:
 if __name__ == "__main__":
     build_model = Build()
     train_generator, test_generator, label_mapping = build_model.extraction()
-    cnn_model = CNN().define_cnn(train_generator)
-    CNN().learn(cnn_model, train_generator, test_generator, label_mapping)
+
+    # Experiment with hyperparameters
+    dropout_rate = 0.7  # Try different values
+    l2_reg = 0.001  # Try different values
+    learning_rate = 0.0001  # Try different values
+    batch_size = 64  # Try different values
+    epochs = 20  # Try different values
+
+    cnn_model = CNN().define_cnn(train_generator, dropout_rate=dropout_rate, l2_reg=l2_reg)
+    CNN().learn(cnn_model, train_generator, test_generator, label_mapping, learning_rate=learning_rate, batch_size=batch_size, epochs=epochs)
