@@ -1,16 +1,17 @@
 import os
 import pandas as pd
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import numpy as np
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from sklearn.utils.class_weight import compute_class_weight
+from imblearn.over_sampling import RandomOverSampler
 
-class Build:
-    def extraction(self):
-        # Stored locally
-        dataset_path = r"C:\Users\tomjh\Desktop\Cancer Cell Dataset"
 
+class FetchFiles:
+    def extraction(self, dataset_path, sample_size=None):
+
+        # Load metadata
         files = os.listdir(dataset_path)
-
         metadata_path = os.path.join(dataset_path, files[2])
         df = pd.read_csv(metadata_path)
 
@@ -40,12 +41,24 @@ class Build:
         image_paths = np.array(image_paths)
         numerical_labels = np.array(numerical_labels)
 
-        # Take a sample of 500 images for quick testing trying to debug overfitting
-        sample_indices = np.random.choice(len(image_paths), 500, replace=False)
-        image_paths = image_paths[sample_indices]
-        numerical_labels = numerical_labels[sample_indices]
+        # Take a sample of images if specified
+        if sample_size and sample_size < len(image_paths):
+            # For debugging, ensure we have a stratified sample
+            from sklearn.model_selection import StratifiedShuffleSplit
+            sss = StratifiedShuffleSplit(n_splits=1, test_size=1 - sample_size / len(image_paths), random_state=42)
+            for train_index, _ in sss.split(image_paths, numerical_labels):
+                image_paths = image_paths[train_index]
+                numerical_labels = numerical_labels[train_index]
+
+        # # Print class distribution
+        # unique_labels, counts = np.unique(numerical_labels, return_counts=True)
+        # print("\nClass distribution before split:")
+        # for label, count in zip(unique_labels, counts):
+        #     print(
+        #         f"Class {label} ({list(label_mapping.keys())[list(label_mapping.values()).index(label)]}) : {count} samples")
 
         # Stratified split
+        # Following the 80/20 split rule
         train_images, test_images, train_labels, test_labels = train_test_split(
             image_paths,
             numerical_labels,
@@ -53,6 +66,23 @@ class Build:
             stratify=numerical_labels,
             random_state=42
         )
+
+        # # Calculate class weights for imbalanced dataset (better than oversampling)
+        # class_weights = compute_class_weight(
+        #     class_weight='balanced',
+        #     classes=np.unique(train_labels),
+        #     y=train_labels
+        # )
+        # class_weights_dict = {i: weight for i, weight in enumerate(class_weights)}
+        # print("\nClass weights to handle imbalance:")
+        # for class_idx, weight in class_weights_dict.items():
+        #     print(f"Class {class_idx}: {weight:.2f}")
+
+        oversample = RandomOverSampler(random_state=42)
+        image_paths_resampled, numerical_labels_resampled = oversample.fit_resample(
+            image_paths.reshape(-1, 1), numerical_labels
+        )
+        image_paths_resampled = image_paths_resampled.flatten
 
         # Transform into dataframes using pandas
         train_df = pd.DataFrame({
@@ -68,24 +98,18 @@ class Build:
         IMG_SIZE = (128, 128)
         BATCH_SIZE = 32
 
-        # Data augmentation
-        # Rescaling/brightness/rotations/shearing/shifting to images
+        # Data normalisation
         train_datagen = ImageDataGenerator(
-            rescale=1. / 255,
-            rotation_range=40,
+            rescale=1./255,
+            rotation_range=20,
             width_shift_range=0.2,
             height_shift_range=0.2,
             shear_range=0.2,
-            zoom_range=0.3,
-            horizontal_flip=True,
-            vertical_flip=True,
-            brightness_range=(0.8, 1.2),
-            fill_mode='nearest'
+            zoom_range=0.2,
+            horizontal_flip=True
         )
-
         test_datagen = ImageDataGenerator(rescale=1. / 255)
 
-        # Async file loading
         train_generator = train_datagen.flow_from_dataframe(
             dataframe=train_df,
             x_col="filename",
@@ -103,5 +127,6 @@ class Build:
             class_mode="categorical",
             batch_size=BATCH_SIZE
         )
+
 
         return train_generator, test_generator, label_mapping
