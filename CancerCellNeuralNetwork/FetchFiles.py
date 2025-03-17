@@ -3,10 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from sklearn.utils.class_weight import compute_class_weight
 from imblearn.over_sampling import RandomOverSampler
-import json
-from sklearn.preprocessing import LabelEncoder
 
 
 
@@ -22,13 +19,6 @@ class FetchFiles:
         # Turn cols in CSV to array
         image_ids = df['image_id'].tolist()
         labels = df['dx'].tolist()
-
-        # # Encode the labels into integers (mapping each string label to an integer)
-        # label_encoder = LabelEncoder()
-        # encoded_labels = label_encoder.fit_transform(labels)
-        #
-        # # You can store the label encoder or use its inverse mapping later to decode the predictions
-        # print(label_encoder.classes_)
 
         # Dict comprehension to label each type of cancer
         label_mapping = {label: idx for idx, label in enumerate(set(labels))}
@@ -52,22 +42,6 @@ class FetchFiles:
         image_paths = np.array(image_paths)
         numerical_labels = np.array(numerical_labels)
 
-        # # Take a sample of images if specified
-        # if sample_size and sample_size < len(image_paths):
-        #     # For debugging, ensure we have a stratified sample
-        #     from sklearn.model_selection import StratifiedShuffleSplit
-        #     sss = StratifiedShuffleSplit(n_splits=1, test_size=1 - sample_size / len(image_paths), random_state=42)
-        #     for train_index, _ in sss.split(image_paths, numerical_labels):
-        #         image_paths = image_paths[train_index]
-        #         numerical_labels = numerical_labels[train_index]
-
-        # # Print class distribution
-        # unique_labels, counts = np.unique(numerical_labels, return_counts=True)
-        # print("\nClass distribution before split:")
-        # for label, count in zip(unique_labels, counts):
-        #     print(
-        #         f"Class {label} ({list(label_mapping.keys())[list(label_mapping.values()).index(label)]}) : {count} samples")
-
         # Stratified split
         # Following the 80/20 split rule
         train_images, test_images, train_labels, test_labels = train_test_split(
@@ -77,17 +51,6 @@ class FetchFiles:
             stratify=numerical_labels,
             random_state=42
         )
-
-        # # Calculate class weights for imbalanced dataset (better than oversampling)
-        # class_weights = compute_class_weight(
-        #     class_weight='balanced',
-        #     classes=np.unique(train_labels),
-        #     y=train_labels
-        # )
-        # class_weights_dict = {i: weight for i, weight in enumerate(class_weights)}
-        # print("\nClass weights to handle imbalance:")
-        # for class_idx, weight in class_weights_dict.items():
-        #     print(f"Class {class_idx}: {weight:.2f}")
 
         oversample = RandomOverSampler(random_state=42)
         image_paths_resampled, numerical_labels_resampled = oversample.fit_resample(
