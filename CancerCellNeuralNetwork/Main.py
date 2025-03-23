@@ -8,7 +8,6 @@ from plotting.ConfusionMatrix import PlotConfusionMatrix
 from plotting.ModelEvaluation import PlotMetrics
 from testing.UploadTestImage import UploadTestImage
 from testing.RunTestOnly import RunTestOnly
-import tensorflow as tf
 
 DATASET_PATH = r"C:\Users\tomjh\Desktop\Cancer Cell Dataset"
 TEST_IMAGE_PATH = r"C:\Users\tomjh\Desktop"
@@ -49,18 +48,6 @@ def run_full_pipeline():
 
     return model, label_mapping
 
-
-# def run_test_only():
-#     # Load the pre-trained model
-#     model = tf.keras.models.load_model('working_cnn_model.keras')
-#
-#     # You'll need to load or recreate the label_mapping here
-#     # This could be loaded from a saved file or recreated
-#     # For example:
-#     fetcher = FetchFiles(DATASET_PATH)
-#     _, _, label_mapping = fetcher.extraction()
-#
-#     return model, label_mapping
 
 
 if __name__ == '__main__':
