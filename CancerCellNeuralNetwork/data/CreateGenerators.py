@@ -1,6 +1,7 @@
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 class CreateGenerators:
+    # Create generators for async image loading to really speed up the training
     def __init__(self, img_size=(128, 128), batch_size=32):
         self.IMG_SIZE = img_size
         self.BATCH_SIZE = batch_size

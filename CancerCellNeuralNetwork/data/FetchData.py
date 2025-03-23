@@ -12,7 +12,7 @@ class FetchFiles:
     def extraction(self):
         # Load metadata
         files = os.listdir(self.dataset_path)
-        metadata_path = os.path.join(self.dataset_path, files[2])  # Ensure this is the metadata CSV
+        metadata_path = os.path.join(self.dataset_path, files[2])  # This is edifice to my local machine
         df = pd.read_csv(metadata_path)
 
         # Map labels to numbers
@@ -23,6 +23,7 @@ class FetchFiles:
         images_folder_1 = os.path.join(self.dataset_path, files[0])
         images_folder_2 = os.path.join(self.dataset_path, files[1])
 
+        # Load images paths into one list
         image_paths = [
             os.path.join(images_folder_1, img + ".jpg") if os.path.exists(os.path.join(images_folder_1, img + ".jpg"))
             else os.path.join(images_folder_2, img + ".jpg")

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.layers import MaxPooling2D
 
 class PlotMetrics:
+    # Plots all the metrics
     @staticmethod
     def plot_training_history(self, history):
         """Plot comprehensive training metrics."""

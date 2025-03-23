@@ -9,12 +9,14 @@ class RunModel:
 
     def train(self, model, train_generator, test_generator, label_mapping, class_weights=None):
         # Define callbacks
+        # Early stopping to try to avoid model getting worse
         callbacks = [
             EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True, verbose=1),
             ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6, verbose=1)
         ]
 
         # Compile model
+        # Recall and precision for false negative tracking
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate),
             loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
@@ -28,6 +30,7 @@ class RunModel:
         )
 
         # Train
+        # fitting the model :)
         history = model.fit(
             train_generator,
             epochs=self.epochs,
