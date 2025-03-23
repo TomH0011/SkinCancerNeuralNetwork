@@ -43,9 +43,9 @@ def run_full_pipeline():
 
     # 7. Draw plots
     confusion_matrix = PlotConfusionMatrix()
-    evaluation_metric = confusion_matrix.evaluate_model(model, test_generator, label_mapping)
+    confusion_matrix.evaluate_model(model, test_generator, label_mapping)
     draw_metrics = PlotMetrics()
-    metric_sheet = draw_metrics.plot_training_history(history)
+    draw_metrics.plot_training_history(history)
 
     return model, label_mapping
 
