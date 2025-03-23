@@ -1,3 +1,4 @@
+import logging
 import os
 from tensorflow.keras.preprocessing import image
 import numpy as np
@@ -8,19 +9,31 @@ class UploadTestImage:
 
         IMG_SIZE = (128, 128)
 
-        os.makedirs(uploaded_file_path, exist_ok=True)  # Ensure directory exists
-        img_path = os.path.join(uploaded_file_path, "Melanoma_skin_lesion.jpg")
+        try:
 
-        img = image.load_img(img_path, target_size=IMG_SIZE)
-        img_array = image.img_to_array(img) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
+            os.makedirs(uploaded_file_path, exist_ok=True)  # Ensure directory exists
+            img_path = os.path.join(uploaded_file_path, "Melanoma_skin_lesion.jpg")
 
-        model = load_model(r"D:\  Hello World\CancerCellNeuralNetwork\CancerCellNeuralNetwork\working_cnn_model.keras")
-        predictions = model.predict(img_array)
-        predicted_classification = np.argmax(predictions)
-        certainty = np.max(predictions)
+            img = image.load_img(img_path, target_size=IMG_SIZE)
+            img_array = image.img_to_array(img) / 255.0
+            img_array = np.expand_dims(img_array, axis=0)
 
-        return predicted_classification, certainty
+            model = load_model(r"D:\  Hello World\CancerCellNeuralNetwork\CancerCellNeuralNetwork\working_cnn_model.keras")
+            predictions = model.predict(img_array)
+            predicted_classification = np.argmax(predictions)
+            certainty = np.max(predictions)
+            if certainty > 1:
+                raise ValueError("Certainty is too high...")
+
+            return predicted_classification, certainty
+
+        except FileNotFoundError as e:
+            logging.error(f"FileNotFoundError: {e}")
+            raise
+
+        except ValueError:
+            logging.error("Certainty is too high")
+            raise
 
     def final_score(self, predicted_classification, certainty):
         print(f'The prediction is {predicted_classification} with {certainty} certainty')
